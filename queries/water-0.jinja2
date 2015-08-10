@@ -1,11 +1,15 @@
-{% if zoom < 9 %}
-SELECT
-    '' AS name,
+{% macro ne_water_cols(kind) %}
     sum(way_area)::bigint AS area,
-    'ocean' AS kind,
+    '{{ kind }}' AS kind,
     'naturalearthdata.com' AS source,
     {% filter geometry %}st_union(the_geom){% endfilter %} AS __geometry__,
     max(gid) AS __id__
+{% endmacro %}
+
+{% if zoom < 9 %}
+SELECT
+    '' AS name,
+    {{ ne_water_cols('ocean') }}
 
 {% if zoom < 4 %}
 FROM ne_110m_ocean
@@ -21,11 +25,7 @@ UNION
 
 SELECT
     name,
-    sum(way_area)::bigint AS area,
-    'lake' AS kind,
-    'naturalearthdata.com' AS source,
-    {% filter geometry %}st_union(the_geom){% endfilter %} AS __geometry__,
-    max(gid) AS __id__
+    {{ ne_water_cols('lake') }}
 
 {% if zoom < 4 %}
 FROM ne_110m_lakes
@@ -43,11 +43,7 @@ UNION
 
 SELECT
     name,
-    sum(way_area)::bigint AS area,
-    'playa' AS kind,
-    'naturalearthdata.com' AS source,
-    {% filter geometry %}st_union(the_geom){% endfilter %} AS __geometry__,
-    max(gid) __id__
+    {{ ne_water_cols('playa') }}
 
 {% if 4 <= zoom < 7 %}
 FROM ne_50m_playas
